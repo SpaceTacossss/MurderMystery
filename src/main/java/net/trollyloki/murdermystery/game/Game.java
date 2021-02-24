@@ -4,12 +4,10 @@ import net.trollyloki.murdermystery.MurderMysteryPlugin;
 import net.trollyloki.murdermystery.Utils;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +16,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
+import org.bukkit.util.RayTraceResult;
 
 import java.util.*;
 
@@ -230,9 +229,13 @@ public class Game extends BukkitRunnable {
         this.roles.put(murderer, Role.MURDERER);
         UUID detective = Utils.removeRandomElement(options);
         this.roles.put(detective, Role.DETECTIVE);
+//        if (!options.isEmpty()) {
+//            UUID underdog = Utils.removeRandomElement(options);
+//            this.roles.put(underdog, Role.UNDERDOG);
+//        }
         if (!options.isEmpty()) {
-            UUID underdog = Utils.removeRandomElement(options);
-            this.roles.put(underdog, Role.UNDERDOG);
+            UUID snoop = Utils.removeRandomElement(options);
+            this.roles.put(snoop, Role.SNOOP);
         }
         for (UUID bystander : options)
             this.roles.put(bystander, Role.BYSTANDER);
@@ -277,6 +280,15 @@ public class Game extends BukkitRunnable {
                 } else if (role == Role.UNDERDOG) {
 
                     player.getInventory().setItem(slot, new ItemStack(Material.SNOWBALL));
+
+                } else if (role == Role.SNOOP) {
+
+                    //player.getInventory().setItem(slot, new ItemStack(Material.LEVER, 3));
+                    ItemStack gadget = new ItemStack(Material.LEVER, 3);
+                    ItemMeta meta = gadget.getItemMeta();
+                    meta.setDisplayName(plugin.getConfigString("items.snoop.device_name"));
+                    gadget.setItemMeta(meta);
+                    player.getInventory().setItem(slot, gadget);
 
                 }
                 player.getInventory().setItem(9, new ItemStack(Material.ARROW));
@@ -575,7 +587,7 @@ public class Game extends BukkitRunnable {
                         || event.getDamager() instanceof Projectile) { // damage method is valid for kill
 
                     Role role = kill((Player) event.getEntity());
-                    if (role != Role.MURDERER && getRole(player) != Role.MURDERER) // kill player if they killed an innocent
+                    if (role != Role.MURDERER && role != Role.SNOOP && getRole(player) != Role.MURDERER) // kill player if they killed an innocent
                         kill(player);
 
                 }
@@ -584,6 +596,28 @@ public class Game extends BukkitRunnable {
 
         }
 
+    }
+
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!isRunning())
+            return;
+        if (getRole(event.getPlayer()) == Role.SNOOP) {
+            if (event.getItem() != null && event.getItem().getType() == Material.LEVER) {
+                Location eye = event.getPlayer().getEyeLocation();
+                RayTraceResult target = eye.getWorld().rayTraceEntities(eye, eye.getDirection(), 100, entity -> {
+                    if (entity == event.getPlayer())
+                        return false;
+                    if (entity instanceof Player && ((Player) entity).getGameMode() == GameMode.SPECTATOR)
+                        return false;
+                    return true;
+                });
+                if (target != null && target.getHitEntity() != null && target.getHitEntity().getType() == EntityType.PLAYER) {
+                    event.getItem().setAmount(event.getItem().getAmount() - 1);
+                    ((LivingEntity) target.getHitEntity()).addPotionEffect(
+                            new PotionEffect(PotionEffectType.GLOWING, 100, 0, false,false, false));
+                }
+            }
+        }
     }
 
     public void onPlayerMove(PlayerMoveEvent event) {

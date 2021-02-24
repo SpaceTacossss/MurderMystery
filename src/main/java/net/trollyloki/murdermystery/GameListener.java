@@ -125,6 +125,13 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Game game = getGame(event.getPlayer());
+        if (game != null)
+            game.onPlayerInteract(event);
+    }
+
+    @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Game game = getGame(event.getPlayer());
         if (game != null)

@@ -19,6 +19,9 @@ roles:
   underdog:
     name: '&5Underdog'
     goal: 'Snowball the murderer'
+  snoop:
+    name: '&cSnoop'
+    goal: 'Locate pesky hiders'
   bystander:
     name: '&6Bystander'
     goal: 'Survive the murderer'
@@ -68,3 +71,5 @@ items:
     bow_name: '&9Detective Bow'
     bow_dropped: '&9The bow has been dropped!'
     bow_pickedup: '&9The bow has been picked up!'
+  snoop:
+    snoop_device: '&cSnooping Device'

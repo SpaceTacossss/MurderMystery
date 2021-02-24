@@ -2,6 +2,6 @@ package net.trollyloki.murdermystery.game;
 
 public enum Role {
 
-    MURDERER, DETECTIVE, UNDERDOG, BYSTANDER, DEAD;
+    MURDERER, DETECTIVE, UNDERDOG, SNOOP, BYSTANDER, DEAD;
 
 }
